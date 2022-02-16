@@ -1,0 +1,43 @@
+---
+name: "deploy_docker_app"
+description: "Deployne docker aplikaciu"
+enabled: true
+entry_point: "workflows/deploy_docker_app.yaml"
+pack: "st2_app_shared"
+runner_type: "orquesta"
+parameters:
+  app:
+    type: "string"
+    required: true
+  app_version:
+    type: "string"
+    required: true
+    default: "latest"
+  project_tag:
+    type: "string"
+    required: true
+    default: "DIPLOMOVKA"
+    immutable: true
+  env:
+    type: "string"
+    required: true
+    default: "(base)"
+  docker_host:  
+    type: "string"
+    required: true
+    default: "diplomovka-app-01"
+  saltmaster:
+    type: "string"
+    required: true
+    default: "diplomovka-ops"
+  docker_repository:
+    type: "string"
+    required: true
+  dockercompose_path:
+    type: "string"
+    required: true
+    default: "/opt/diplomovka_compose"
+  only_pull_image:
+    type: "boolean"
+    required: true
+    default: "false"

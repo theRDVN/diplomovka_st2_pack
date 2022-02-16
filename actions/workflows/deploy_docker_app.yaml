@@ -1,0 +1,254 @@
+version: 1.0
+
+input:
+  - app
+  - app_version
+  - project_tag
+  - env
+  - docker_host
+  - saltmaster
+  - docker_repository
+  - dockercompose_path
+  - only_pull_image
+
+tasks:
+
+######  Git Pull App Config  ##############################
+
+  git_drop_local_changes:
+    action: salt.client
+    input:
+      module: git.stash
+      matches: <% ctx(dkr_app_host) %>
+      args:
+        - <% ctx(dockercompose_path) %>
+    next:
+      - when: <% succeeded() %>
+        do: 
+          - git_pull_config
+      - when: <% failed() %>
+        do: 
+          - slack_fail
+
+  git_pull_config:
+    action: salt.client
+    input:
+      module: git.pull
+      matches: <% ctx(dkr_app_host) %>
+      args:
+        - <% ctx(dockercompose_path) %>
+    next:
+      - when: <% succeeded() and ctx(app_version) != 'latest' %>
+        do: 
+          - replace_version_in_dockercompose
+      - when: <% succeeded() and ctx(app_version) = 'latest' %>
+        do: 
+          - notify_start_pullimage
+      - when: <% failed() %>
+        do: 
+          - slack_fail
+
+######  Replace latest tag with the version in the docker-compose file  ##############################
+
+  replace_version_in_dockercompose:
+    action: salt.client
+    input:
+      module: file.replace
+      matches: <% ctx(dkr_app_host) %>
+      args:
+        - "<% ctx(dockercompose_path) %>/docker-compose.yml"
+      kwargs: {"pattern":"-latest", "repl":"-v<% ctx(app_version) %>"}
+    next:
+      - when: <% succeeded() %>
+        do: 
+          - notify_start_pullimage
+      - when: <% failed() %>
+        do: 
+          - slack_fail
+
+######   Notify start Pull Image ##############################
+
+  notify_start_pullimage:
+    action: "chatops.post_message"
+    input:
+      channel: "<% ctx(channel) %>"
+      message: "Starting pulling the image for *<% ctx(app_name) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*."
+    next:
+      - when: <% succeeded() %>
+        do: 
+          - docker_compose_pull_image
+      - when: <% failed() %>
+        do: 
+          - slack_fail
+
+######   Pull docker image  ##############################
+
+  docker_compose_pull_image:
+    action: salt.client
+    input:
+      module: dockercompose.pull
+      matches: <% ctx(dkr_app_host) %>
+      args:
+        - "<% ctx(dockercompose_path) %>"
+      kwargs: {"service_names": ["<% ctx(app_name) %>"]}
+      timeout: 2400
+    retry: 
+      when: <% result().result.values().select($.status).contains(false) %>
+      #when: <% failed() %>
+      count: 3
+      delay: 5
+    next:
+      - when: <% succeeded() and ctx(only_pull_image) != true and result().result.values().select($.status).contains(false) != true %>
+        do: 
+          - notify_start_deploy
+      - when: <% succeeded() and ctx(only_pull_image) = true and result().result.values().select($.status).contains(false) != true %>
+        publish: 
+          - docker_pull_status: "<% result().result %>"
+        do: 
+          - notify_finish_pullimage
+      - when: <% failed() or result().result.values().select($.status).contains(false) = true %>
+        do: 
+          - slack_fail_pullimage
+  
+######   Notify start  ##############################
+
+  notify_start_deploy:
+    action: "chatops.post_message"
+    input:
+      channel: "<% ctx(channel) %>"
+      message: "Starting deployment for *<% ctx(app_name) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail"
+    next:
+      - when: <% succeeded() %>
+        do: 
+          - docker_compose_stop
+      - when: <% failed() %>
+        do: 
+          - slack_fail
+
+# ######  Render passwords in .env file  ##############################
+#   render_passwords_in_env_file:
+#     action: salt.client
+#     input:
+#       module: state.apply
+#       matches: <% ctx(dkr_app_host) %>
+#       args:
+#         - docker_apps.<% ctx(app_name) %>-docker-env
+#     next:
+#       - when: <% succeeded() %>
+#         do: 
+#           - docker_compose_stop
+#       - when: <% failed() %>
+#         do: 
+#           - slack_fail
+
+######   Docker-compose restart  ##############################
+
+  docker_compose_stop:
+    action: salt.client
+    input:
+      module: dockercompose.stop
+      matches: <% ctx(dkr_app_host) %>
+      args:
+        - "<% ctx(dockercompose_path) %>"
+      kwargs: {"service_names": ["<% ctx(app_name) %>"]}
+    next:
+      - when: <% succeeded() %>
+        do: 
+          - docker_compose_start
+      - when: <% failed() %>
+        do: 
+          - slack_fail
+
+  docker_compose_start:
+    action: salt.client
+    input:
+      module: dockercompose.up
+      matches: <% ctx(dkr_app_host) %>
+      args:
+        - "<% ctx(dockercompose_path) %>"
+      kwargs: {"service_names": ["<% ctx(app_name) %>"]}
+    next:
+      - when: <% succeeded() %>
+        do: 
+          - remove_unused_images
+      - when: <% failed() %>
+        do: 
+          - slack_fail
+
+######   Docker Prune Unused Images  ##############################
+
+  remove_unused_images:
+    action: salt.client
+    input:
+      module: docker.prune
+      matches: <% ctx(dkr_app_host) %>
+      args:
+        - "images=true"
+        - "dangling=false"
+    next:
+      - when: <% succeeded() %>
+        do: 
+          - show_docker_ps_info
+      - when: <% failed() %>
+        do: 
+          - slack_fail
+
+######   Show docker ps info  ##############################
+
+  show_docker_ps_info:
+    action: salt.client
+    input:
+      module: docker.ps
+      matches: <% ctx(dkr_app_host) %>
+      args:
+        - "filters={'label': 'com.docker.compose.service=<% ctx(app_name) %>'}"
+    next:
+      - when: <% succeeded() %>
+        do: 
+          - notify_finish
+      - when: <% failed() %>
+        do: 
+          - slack_fail
+
+######   NOTIFY FINISH  ##############################
+
+  notify_finish:
+    action: "chatops.post_message"
+    input:
+      channel: "<% ctx(channel) %>"
+      message: "`<% ctx(env) %>(<% ctx(app_name) %>) Deployment finished !`"
+    next:
+      - when: <% succeeded() %>
+        do: 
+          - log_success
+
+  notify_finish_pullimage:
+    action: "chatops.post_message"
+    input:
+      channel: "<% ctx(channel) %>"
+      message: "`<% ctx(env) %>(<% ctx(app_name) %>) Pulling the image finished!`"
+
+######   FAIL notifications  ##############################
+
+  slack_fail:
+    action: "chatops.post_message"
+    input:
+      channel: "<% ctx(channel) %>"
+      message: "<% ctx(env) %>(<% ctx(app_name) %>) Deployment workflow failed. Please check logs"
+    next:
+      - when: <% completed() %>
+        do: 
+          - mail_1_fail
+          - log_fail
+          - fail
+
+  slack_fail_pullimage:
+    action: "chatops.post_message"
+    input:
+      channel: "<% ctx(channel) %>"
+      message: "<% ctx(env) %>(<% ctx(app_name) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again"
+    next:
+      - when: <% completed() %>
+        do: 
+          - mail_2_fail
+          - fail

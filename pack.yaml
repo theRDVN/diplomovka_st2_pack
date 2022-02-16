@@ -1,0 +1,12 @@
+---
+name: st2-diplomovka-app
+ref : st2_diplomovka_app
+description : Orchestacie pre aplikacie a common services v diplomovej praci
+keywords:
+  - stackstorm
+  - diplomovka
+  - docker
+  - common
+version : 1.0.0
+author : Radovan Pieter
+email : rado.pieter@gmail.com
