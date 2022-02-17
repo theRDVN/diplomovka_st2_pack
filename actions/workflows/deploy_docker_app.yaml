@@ -38,12 +38,9 @@ tasks:
       args:
         - <% ctx(dockercompose_path) %>
     next:
-      - when: <% succeeded() and ctx(app_version) != 'latest' %>
+      - when: <% succeeded() %>
         do: 
           - replace_version_in_dockercompose
-      - when: <% succeeded() and ctx(app_version) = 'latest' %>
-        do: 
-          - notify_start_pullimage
       - when: <% failed() %>
         do: 
           - slack_fail
@@ -57,7 +54,7 @@ tasks:
       matches: <% ctx(dkr_app_host) %>
       args:
         - "<% ctx(dockercompose_path) %>/docker-compose.yml"
-      kwargs: {"pattern":":*.*.*-SNAPSHOT", "repl":":<% ctx(app_version) %>"}
+      kwargs: {"pattern":":*.*.*", "repl":":<% ctx(app_version) %>"}
     next:
       - when: <% succeeded() %>
         do: 
