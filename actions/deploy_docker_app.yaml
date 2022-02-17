@@ -3,7 +3,7 @@ name: "deploy_docker_app"
 description: "Deployne docker aplikaciu"
 enabled: true
 entry_point: "workflows/deploy_docker_app.yaml"
-pack: "st2_app_shared"
+pack: "st2_diplomovka_app"
 runner_type: "orquesta"
 parameters:
   app:
