@@ -41,3 +41,6 @@ parameters:
     type: "boolean"
     required: true
     default: false
+  notify_channel:
+    type: "string"
+    required: true

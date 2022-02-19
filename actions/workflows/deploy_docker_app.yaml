@@ -10,6 +10,7 @@ input:
   - docker_repository
   - dockercompose_path
   - only_pull_image
+  - notify_channel
 
 tasks:
 
@@ -19,7 +20,7 @@ tasks:
     action: salt.client
     input:
       module: git.stash
-      matches: <% ctx(dkr_app_host) %>
+      matches: <% ctx(docker_host) %>
       args:
         - <% ctx(dockercompose_path) %>
     next:
@@ -34,7 +35,7 @@ tasks:
     action: salt.client
     input:
       module: git.pull
-      matches: <% ctx(dkr_app_host) %>
+      matches: <% ctx(docker_host) %>
       args:
         - <% ctx(dockercompose_path) %>
     next:
@@ -51,7 +52,7 @@ tasks:
     action: salt.client
     input:
       module: file.replace
-      matches: <% ctx(dkr_app_host) %>
+      matches: <% ctx(docker_host) %>
       args:
         - "<% ctx(dockercompose_path) %>/docker-compose.yml"
       kwargs: {"pattern":":*.*.*", "repl":":<% ctx(app_version) %>"}
@@ -68,8 +69,8 @@ tasks:
   notify_start_pullimage:
     action: "chatops.post_message"
     input:
-      channel: "<% ctx(channel) %>"
-      message: "Starting pulling the image for *<% ctx(app_name) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*."
+      notify_channel: "<% ctx(notify_channel) %>"
+      message: "Starting pulling the image for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*."
     next:
       - when: <% succeeded() %>
         do: 
@@ -84,10 +85,10 @@ tasks:
     action: salt.client
     input:
       module: dockercompose.pull
-      matches: <% ctx(dkr_app_host) %>
+      matches: <% ctx(docker_host) %>
       args:
         - "<% ctx(dockercompose_path) %>"
-      kwargs: {"service_names": ["<% ctx(app_name) %>"]}
+      kwargs: {"service_names": ["<% ctx(app) %>"]}
       timeout: 2400
     retry: 
       when: <% result().result.values().select($.status).contains(false) %>
@@ -112,8 +113,8 @@ tasks:
   notify_start_deploy:
     action: "chatops.post_message"
     input:
-      channel: "<% ctx(channel) %>"
-      message: "Starting deployment for *<% ctx(app_name) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail"
+      notify_channel: "<% ctx(notify_channel) %>"
+      message: "Starting deployment for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail"
     next:
       - when: <% succeeded() %>
         do: 
@@ -127,9 +128,9 @@ tasks:
 #     action: salt.client
 #     input:
 #       module: state.apply
-#       matches: <% ctx(dkr_app_host) %>
+#       matches: <% ctx(docker_host) %>
 #       args:
-#         - docker_apps.<% ctx(app_name) %>-docker-env
+#         - docker_apps.<% ctx(app) %>-docker-env
 #     next:
 #       - when: <% succeeded() %>
 #         do: 
@@ -144,10 +145,10 @@ tasks:
     action: salt.client
     input:
       module: dockercompose.stop
-      matches: <% ctx(dkr_app_host) %>
+      matches: <% ctx(docker_host) %>
       args:
         - "<% ctx(dockercompose_path) %>"
-      kwargs: {"service_names": ["<% ctx(app_name) %>"]}
+      kwargs: {"service_names": ["<% ctx(app) %>"]}
     next:
       - when: <% succeeded() %>
         do: 
@@ -160,10 +161,10 @@ tasks:
     action: salt.client
     input:
       module: dockercompose.up
-      matches: <% ctx(dkr_app_host) %>
+      matches: <% ctx(docker_host) %>
       args:
         - "<% ctx(dockercompose_path) %>"
-      kwargs: {"service_names": ["<% ctx(app_name) %>"]}
+      kwargs: {"service_names": ["<% ctx(app) %>"]}
     next:
       - when: <% succeeded() %>
         do: 
@@ -178,7 +179,7 @@ tasks:
     action: salt.client
     input:
       module: docker.prune
-      matches: <% ctx(dkr_app_host) %>
+      matches: <% ctx(docker_host) %>
       args:
         - "images=true"
         - "dangling=false"
@@ -196,9 +197,9 @@ tasks:
     action: salt.client
     input:
       module: docker.ps
-      matches: <% ctx(dkr_app_host) %>
+      matches: <% ctx(docker_host) %>
       args:
-        - "filters={'label': 'com.docker.compose.service=<% ctx(app_name) %>'}"
+        - "filters={'label': 'com.docker.compose.service=<% ctx(app) %>'}"
     next:
       - when: <% succeeded() %>
         do: 
@@ -212,26 +213,22 @@ tasks:
   notify_finish:
     action: "chatops.post_message"
     input:
-      channel: "<% ctx(channel) %>"
-      message: "`<% ctx(env) %>(<% ctx(app_name) %>) Deployment finished !`"
-    next:
-      - when: <% succeeded() %>
-        do: 
-          - log_success
+      notify_channel: "<% ctx(notify_channel) %>"
+      message: "`<% ctx(env) %>(<% ctx(app) %>) Deployment finished !`"
 
   notify_finish_pullimage:
     action: "chatops.post_message"
     input:
-      channel: "<% ctx(channel) %>"
-      message: "`<% ctx(env) %>(<% ctx(app_name) %>) Pulling the image finished!`"
+      notify_channel: "<% ctx(notify_channel) %>"
+      message: "`<% ctx(env) %>(<% ctx(app) %>) Pulling the image finished!`"
 
 ######   FAIL notifications  ##############################
 
   slack_fail:
     action: "chatops.post_message"
     input:
-      channel: "<% ctx(channel) %>"
-      message: "<% ctx(env) %>(<% ctx(app_name) %>) Deployment workflow failed. Please check logs"
+      notify_channel: "<% ctx(notify_channel) %>"
+      message: "<% ctx(env) %>(<% ctx(app) %>) Deployment workflow failed. Please check logs"
     next:
       - when: <% completed() %>
         do: 
@@ -240,8 +237,8 @@ tasks:
   slack_fail_pullimage:
     action: "chatops.post_message"
     input:
-      channel: "<% ctx(channel) %>"
-      message: "<% ctx(env) %>(<% ctx(app_name) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again"
+      notify_channel: "<% ctx(notify_channel) %>"
+      message: "<% ctx(env) %>(<% ctx(app) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again"
     next:
       - when: <% completed() %>
         do: 
