@@ -69,7 +69,7 @@ tasks:
   notify_start_pullimage:
     action: "chatops.post_message"
     input:
-      notify_channel: "<% ctx(notify_channel) %>"
+      channel: "<% ctx(notify_channel) %>"
       message: "Starting pulling the image for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*."
     next:
       - when: <% succeeded() %>
@@ -113,7 +113,7 @@ tasks:
   notify_start_deploy:
     action: "chatops.post_message"
     input:
-      notify_channel: "<% ctx(notify_channel) %>"
+      channel: "<% ctx(notify_channel) %>"
       message: "Starting deployment for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail"
     next:
       - when: <% succeeded() %>
@@ -213,13 +213,13 @@ tasks:
   notify_finish:
     action: "chatops.post_message"
     input:
-      notify_channel: "<% ctx(notify_channel) %>"
+      channel: "<% ctx(notify_channel) %>"
       message: "`<% ctx(env) %>(<% ctx(app) %>) Deployment finished !`"
 
   notify_finish_pullimage:
     action: "chatops.post_message"
     input:
-      notify_channel: "<% ctx(notify_channel) %>"
+      channel: "<% ctx(notify_channel) %>"
       message: "`<% ctx(env) %>(<% ctx(app) %>) Pulling the image finished!`"
 
 ######   FAIL notifications  ##############################
@@ -227,7 +227,7 @@ tasks:
   slack_fail:
     action: "chatops.post_message"
     input:
-      notify_channel: "<% ctx(notify_channel) %>"
+      channel: "<% ctx(notify_channel) %>"
       message: "<% ctx(env) %>(<% ctx(app) %>) Deployment workflow failed. Please check logs"
     next:
       - when: <% completed() %>
@@ -237,7 +237,7 @@ tasks:
   slack_fail_pullimage:
     action: "chatops.post_message"
     input:
-      notify_channel: "<% ctx(notify_channel) %>"
+      channel: "<% ctx(notify_channel) %>"
       message: "<% ctx(env) %>(<% ctx(app) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again"
     next:
       - when: <% completed() %>
