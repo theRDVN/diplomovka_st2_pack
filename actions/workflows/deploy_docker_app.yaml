@@ -235,8 +235,6 @@ tasks:
     next:
       - when: <% completed() %>
         do: 
-          - mail_1_fail
-          - log_fail
           - fail
 
   slack_fail_pullimage:
@@ -247,5 +245,4 @@ tasks:
     next:
       - when: <% completed() %>
         do: 
-          - mail_2_fail
           - fail
