@@ -33,6 +33,7 @@ parameters:
   docker_repository:
     type: "string"
     required: true
+    default: "therdvn"
   dockercompose_path:
     type: "string"
     required: true
