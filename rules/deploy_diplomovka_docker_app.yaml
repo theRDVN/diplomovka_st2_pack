@@ -23,4 +23,4 @@ action:
     saltmaster: "diplomovka-ops"
     dockercompose_path: "/opt/diplomovka_docker_app"
     docker_repository: "therdvn"
-  ref: "st2_diplomovka_app.deploy_docker_app.yaml"
+  ref: "st2_diplomovka_app.deploy_docker_app"
