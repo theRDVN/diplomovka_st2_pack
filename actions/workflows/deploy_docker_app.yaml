@@ -55,7 +55,7 @@ tasks:
       matches: <% ctx(docker_host) %>
       args:
         - "<% ctx(dockercompose_path) %>/docker-compose.yml"
-      kwargs: {"pattern":":*.*.*", "repl":":<% ctx(app_version) %>"}
+      kwargs: {"pattern":":latest", "repl":":<% ctx(app_version) %>"}
     next:
       - when: <% succeeded() %>
         do: 
