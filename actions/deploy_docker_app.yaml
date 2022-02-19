@@ -17,7 +17,6 @@ parameters:
     type: "string"
     required: true
     default: "DIPLOMOVKA"
-    immutable: true
   env:
     type: "string"
     required: true
