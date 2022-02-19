@@ -16,7 +16,7 @@ action:
   parameters:
     # Parametre posielane v payloade webhook-u
     app_version: "{{ trigger.body.app_version }}"
-    app: "{{ trigger.body.app_artifact_id }}"
+    app: "{{ trigger.body.app }}"
     docker_host: "diplomovka-app-0*"
     env: "(BASE)"
     project_tag: "DIPLOMOVKA"
