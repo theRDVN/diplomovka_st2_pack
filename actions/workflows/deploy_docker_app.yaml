@@ -67,10 +67,11 @@ tasks:
 ######   Notify start Pull Image ##############################
 
   notify_start_pullimage:
-    action: "chatops.post_message"
+    action: "core.remote"
     input:
-      channel: "<% ctx(notify_channel) %>"
-      message: "Starting pulling the image for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*."
+      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Starting pulling the image for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\"}' https://hooks.slack.com/services/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"
+      hosts: "<% ctx(saltmaster) %>"
+      username: "root"
     next:
       - when: <% succeeded() %>
         do: 
@@ -111,10 +112,11 @@ tasks:
 ######   Notify start  ##############################
 
   notify_start_deploy:
-    action: "chatops.post_message"
+    action: "core.remote"
     input:
-      channel: "<% ctx(notify_channel) %>"
-      message: "Starting deployment for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail"
+      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Starting deployment for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail\"}' https://hooks.slack.com/services/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"
+      hosts: "<% ctx(saltmaster) %>"
+      username: "root"
     next:
       - when: <% succeeded() %>
         do: 
@@ -122,22 +124,6 @@ tasks:
       - when: <% failed() %>
         do: 
           - slack_fail
-
-# ######  Render passwords in .env file  ##############################
-#   render_passwords_in_env_file:
-#     action: salt.client
-#     input:
-#       module: state.apply
-#       matches: <% ctx(docker_host) %>
-#       args:
-#         - docker_apps.<% ctx(app) %>-docker-env
-#     next:
-#       - when: <% succeeded() %>
-#         do: 
-#           - docker_compose_stop
-#       - when: <% failed() %>
-#         do: 
-#           - slack_fail
 
 ######   Docker-compose restart  ##############################
 
@@ -211,34 +197,39 @@ tasks:
 ######   NOTIFY FINISH  ##############################
 
   notify_finish:
-    action: "chatops.post_message"
+    action: "core.remote"
     input:
-      channel: "<% ctx(notify_channel) %>"
-      message: "`<% ctx(env) %>(<% ctx(app) %>) Deployment finished !`"
+      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"`<% ctx(env) %>(<% ctx(app) %>) Deployment finished !`\"}' https://hooks.slack.com/services/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"
+      hosts: "<% ctx(saltmaster) %>"
+      username: "root"
+
 
   notify_finish_pullimage:
-    action: "chatops.post_message"
+    action: "core.remote"
     input:
-      channel: "<% ctx(notify_channel) %>"
-      message: "`<% ctx(env) %>(<% ctx(app) %>) Pulling the image finished!`"
+      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"`<% ctx(env) %>(<% ctx(app) %>) Pulling the image finished!`\"}' https://hooks.slack.com/services/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"
+      hosts: "<% ctx(saltmaster) %>"
+      username: "root"
 
 ######   FAIL notifications  ##############################
 
   slack_fail:
-    action: "chatops.post_message"
+    action: "core.remote"
     input:
-      channel: "<% ctx(notify_channel) %>"
-      message: "<% ctx(env) %>(<% ctx(app) %>) Deployment workflow failed. Please check logs"
+      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"<% ctx(env) %>(<% ctx(app) %>) Deployment workflow failed. Please check logs\"}' https://hooks.slack.com/services/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"
+      hosts: "<% ctx(saltmaster) %>"
+      username: "root"
     next:
       - when: <% completed() %>
         do: 
           - fail
 
   slack_fail_pullimage:
-    action: "chatops.post_message"
+    action: "core.remote"
     input:
-      channel: "<% ctx(notify_channel) %>"
-      message: "<% ctx(env) %>(<% ctx(app) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again"
+      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"<% ctx(env) %>(<% ctx(app) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again\"}' https://hooks.slack.com/services/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"
+      hosts: "<% ctx(saltmaster) %>"
+      username: "root"
     next:
       - when: <% completed() %>
         do: 
