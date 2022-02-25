@@ -10,7 +10,6 @@ input:
   - docker_repository
   - dockercompose_path
   - only_pull_image
-  - slack_webhook
   - notify_channel
 
 tasks:

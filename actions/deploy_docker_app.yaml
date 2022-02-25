@@ -41,9 +41,6 @@ parameters:
     type: "boolean"
     required: true
     default: false
-  slack_webhook:
-    type: "string"
-    required: true
   notify_channel:
     type: "string"
     required: true

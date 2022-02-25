@@ -23,6 +23,5 @@ action:
     saltmaster: "diplomovka-ops"
     dockercompose_path: "/opt/diplomovka_docker_app"
     docker_repository: "therdvn"
-    slack_webhook: "{{ st2kv.system.slack_webhook }}"
     notify_channel: "diplomova-praca"
   ref: "st2_diplomovka_app.deploy_docker_app"
