@@ -68,11 +68,10 @@ tasks:
 ######   Notify start Pull Image ##############################
 
   notify_start_pullimage:
-    action: "core.remote"
+    action: "chatops.post_message"
     input:
-      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"Starting pulling the image for *<% ctx(app) %>*, version *<% ctx(app_version) %>* to env: *<% ctx(env) %>*.\", \"icon_emoji\": \":male_mage:\"}\" <% ctx(slack_webhook) %>"
-      hosts: "<% ctx(saltmaster) %>"
-      username: "root"
+      channel: "<% ctx(notify_channel) %>"
+      message: "Starting pulling the image for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*."
     next:
       - when: <% succeeded() %>
         do: 
@@ -113,11 +112,10 @@ tasks:
 ######   Notify start  ##############################
 
   notify_start_deploy:
-    action: "core.remote"
+    action: "chatops.post_message"
     input:
-      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"Starting deployment for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail.\", \"icon_emoji\": \":male_mage:\"}\" <% ctx(slack_webhook) %>"
-      hosts: "<% ctx(saltmaster) %>"
-      username: "root"
+      channel: "<% ctx(notify_channel) %>"
+      message: "Starting deployment for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail"
     next:
       - when: <% succeeded() %>
         do: 
@@ -198,39 +196,34 @@ tasks:
 ######   NOTIFY FINISH  ##############################
 
   notify_finish:
-    action: "core.remote"
+    action: "chatops.post_message"
     input:
-      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"<% ctx(env) %>(<% ctx(app) %>) Deployment finished !\", \"icon_emoji\": \":male_mage:\"}\" <% ctx(slack_webhook) %>"
-      hosts: "<% ctx(saltmaster) %>"
-      username: "root"
-
+      channel: "<% ctx(notify_channel) %>"
+      message: "`<% ctx(env) %>(<% ctx(app) %>) Deployment finished !`"
 
   notify_finish_pullimage:
-    action: "core.remote"
+    action: "chatops.post_message"
     input:
-      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"<% ctx(env) %>(<% ctx(app) %>) Pulling the image finished!\"icon_emoji\": \":male_mage:\"}\" <% ctx(slack_webhook) %>"
-      hosts: "<% ctx(saltmaster) %>"
-      username: "root"
+      channel: "<% ctx(notify_channel) %>"
+      message: "`<% ctx(env) %>(<% ctx(app) %>) Pulling the image finished!`"
 
 ######   FAIL notifications  ##############################
 
   slack_fail:
-    action: "core.remote"
+    action: "chatops.post_message"
     input:
-      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"<% ctx(env) %>(<% ctx(app) %>) Deployment workflow failed. Please check logs\", \"icon_emoji\": \":male_mage:\"}\" <% ctx(slack_webhook) %>"
-      hosts: "<% ctx(saltmaster) %>"
-      username: "root"
+      channel: "<% ctx(notify_channel) %>"
+      message: "<% ctx(env) %>(<% ctx(app) %>) Deployment workflow failed. Please check logs"
     next:
       - when: <% completed() %>
         do: 
           - fail
 
   slack_fail_pullimage:
-    action: "core.remote"
+    action: "chatops.post_message"
     input:
-      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"<% ctx(env) %>(<% ctx(app) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again.\", \"icon_emoji\": \":male_mage:\"}\" <% ctx(slack_webhook) %>"
-      hosts: "<% ctx(saltmaster) %>"
-      username: "root"
+      channel: "<% ctx(notify_channel) %>"
+      message: "<% ctx(env) %>(<% ctx(app) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again"
     next:
       - when: <% completed() %>
         do: 
