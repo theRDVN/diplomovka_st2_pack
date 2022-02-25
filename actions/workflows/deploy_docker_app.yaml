@@ -69,7 +69,7 @@ tasks:
   notify_start_pullimage:
     action: "core.remote"
     input:
-      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Starting pulling the image for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\"}' https://hooks.slack.com/services/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"
+      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"Starting pulling the image for *<% ctx(app) %>*, version *<% ctx(app_version) %>* to env: *<% ctx(env) %>*.\", \"icon_emoji\": \":male_mage:\"}\" https://hooks.slack.com/services/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"
       hosts: "<% ctx(saltmaster) %>"
       username: "root"
     next:
@@ -114,7 +114,7 @@ tasks:
   notify_start_deploy:
     action: "core.remote"
     input:
-      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Starting deployment for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail\"}' https://hooks.slack.com/services/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"
+      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"Starting deployment for *<% ctx(app) %>*, version `<% ctx(app_version) %>` to env: *<% ctx(env) %>*.\nSit tight this might take a while. I will let you know when all is done & dusted ... or something fail.\", \"icon_emoji\": \":male_mage:\"}\" https://hooks.slack.com/services/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"
       hosts: "<% ctx(saltmaster) %>"
       username: "root"
     next:
@@ -199,7 +199,7 @@ tasks:
   notify_finish:
     action: "core.remote"
     input:
-      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"`<% ctx(env) %>(<% ctx(app) %>) Deployment finished !`\"}' https://hooks.slack.com/services/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"
+      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"<% ctx(env) %>(<% ctx(app) %>) Deployment finished !\", \"icon_emoji\": \":male_mage:\"}\" https://hooks.slack.com/services/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"
       hosts: "<% ctx(saltmaster) %>"
       username: "root"
 
@@ -207,7 +207,7 @@ tasks:
   notify_finish_pullimage:
     action: "core.remote"
     input:
-      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"`<% ctx(env) %>(<% ctx(app) %>) Pulling the image finished!`\"}' https://hooks.slack.com/services/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"
+      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"<% ctx(env) %>(<% ctx(app) %>) Pulling the image finished!\"icon_emoji\": \":male_mage:\"}\" https://hooks.slack.com/services/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"
       hosts: "<% ctx(saltmaster) %>"
       username: "root"
 
@@ -216,7 +216,7 @@ tasks:
   slack_fail:
     action: "core.remote"
     input:
-      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"<% ctx(env) %>(<% ctx(app) %>) Deployment workflow failed. Please check logs\"}' https://hooks.slack.com/services/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"
+      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"<% ctx(env) %>(<% ctx(app) %>) Deployment workflow failed. Please check logs\", \"icon_emoji\": \":male_mage:\"}\" https://hooks.slack.com/services/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"
       hosts: "<% ctx(saltmaster) %>"
       username: "root"
     next:
@@ -227,7 +227,7 @@ tasks:
   slack_fail_pullimage:
     action: "core.remote"
     input:
-      cmd: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"<% ctx(env) %>(<% ctx(app) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again\"}' https://hooks.slack.com/services/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"
+      cmd: "curl -X POST --data-urlencode \"payload={\"channel\": \"<% ctx(notify_channel) %>\", \"username\": \"Deploy Notifier\", \"text\": \"<% ctx(env) %>(<% ctx(app) %>) Pulling the image version <% ctx(app_version) %> failed. Please check logs, or try again.\", \"icon_emoji\": \":male_mage:\"}\" https://hooks.slack.com/services/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"
       hosts: "<% ctx(saltmaster) %>"
       username: "root"
     next:
