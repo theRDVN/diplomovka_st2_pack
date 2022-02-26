@@ -24,7 +24,7 @@ parameters:
   docker_host:  
     type: "string"
     required: true
-    default: "diplomovka-app-01"
+    default: "dp-app-01"
   saltmaster:
     type: "string"
     required: true
